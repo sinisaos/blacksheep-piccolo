@@ -31,7 +31,7 @@ class CursorPagination:
         if self.order_by == "id":
             # query where limit is equal to page_size plus
             # one in ASC order
-            query = table.select(table.all_columns(), table.get_readable()).order_by(
+            query = table.select().order_by(
                 table._meta.primary_key, ascending=True
             )
             query = query.limit(self.page_size + 1)
@@ -48,23 +48,9 @@ class CursorPagination:
                     .limit(self.page_size)
                 )
                 rows = await query.run()
-                try:
-                    # set new value to next_cursor
-                    next_cursor = self.encode_cursor(str(rows[-1]["id"]))
-                    headers["cursor"] = next_cursor
-                    # return empty cursor if no more results
-                    last_row = (
-                        await table.select()
-                        .limit(1)
-                        .first()
-                        .order_by(table._meta.primary_key)
-                        .run()
-                    )
-                    if await self.decode_cursor(next_cursor, table) == last_row["id"]:
-                        headers["cursor"] = ""
-                except IndexError:
-                    # no more results
-                    headers["cursor"] = ""
+                # set new value to next_cursor
+                next_cursor = self.encode_cursor(str(rows[-1]["id"]))
+                headers["cursor"] = next_cursor
             else:
                 query = query.where(
                     table._meta.primary_key >= int(decoded_cursor)
@@ -73,12 +59,14 @@ class CursorPagination:
                 # set new value to next_cursor
                 next_cursor = self.encode_cursor(str(rows[-1]["id"]))
                 headers["cursor"] = next_cursor
+                if len(rows) <= self.page_size:
+                    headers["cursor"] = self.encode_cursor(str(rows[0]["id"]))
         else:
             # query where limit is equal to page_size plus
             # one in DESC order
-            query = table.select(table.all_columns(), table.get_readable()).order_by(
-                table._meta.primary_key, ascending=False
-            )
+            query = table.select(
+                table.all_columns(), table.get_readable()
+            ).order_by(table._meta.primary_key, ascending=False)
             query = query.limit(self.page_size + 1)
 
             # decoded query params cursor
@@ -93,23 +81,9 @@ class CursorPagination:
                     .limit(self.page_size)
                 )
                 rows = await query.run()
-                try:
-                    # set new value to next_cursor
-                    next_cursor = self.encode_cursor(str(rows[-1]["id"]))
-                    headers["cursor"] = next_cursor
-                    # return empty cursor if no more results
-                    last_row = await (
-                        table.select()
-                        .limit(1)
-                        .order_by(table._meta.primary_key, ascending=False)
-                        .first()
-                        .run()
-                    )
-                    if await self.decode_cursor(next_cursor, table) == last_row["id"]:
-                        headers["cursor"] = ""
-                except IndexError:
-                    # no more results
-                    headers["cursor"] = ""
+                # set new value to next_cursor
+                next_cursor = self.encode_cursor(str(rows[-1]["id"]))
+                headers["cursor"] = next_cursor
             else:
                 query = query.where(
                     table._meta.primary_key <= int(decoded_cursor)
@@ -118,6 +92,8 @@ class CursorPagination:
                 # set new value to next_cursor
                 next_cursor = self.encode_cursor(str(rows[-1]["id"]))
                 headers["cursor"] = next_cursor
+                if len(rows) <= self.page_size:
+                    headers["cursor"] = self.encode_cursor(str(rows[0]["id"]))
 
         query = query.limit(self.page_size)
         return query, headers

@@ -85,13 +85,13 @@ class Tasks(ApiController):
     #     first_row = (
     #         await Task.select()
     #         .limit(1)
-    #         .order_by(Task._meta.primary_key)
+    #         .order_by(Task._meta.primary_key, ascending=False)
     #         .first()
     #         .run()
     #     )
     #     last_row = (
     #         await Task.select()
-    #         .order_by(Task._meta.primary_key, ascending=False)
+    #         .order_by(Task._meta.primary_key)
     #         .limit(1)
     #         .first()
     #         .run()
@@ -126,11 +126,12 @@ class Tasks(ApiController):
     #         b"next_cursor", bytes(f"{headers['cursor']}", "utf-8")
     #     )
     #     response.add_header(
-    #         b"first_row", bytes(f"{str(first_row['id'])}", "utf-8")
+    #         b"first_row", bytes(f"{str(last_row['id'])}", "utf-8")
     #     )
     #     response.add_header(
-    #         b"last_row", bytes(f"{str(last_row['id'])}", "utf-8")
+    #         b"last_row", bytes(f"{str(first_row['id'])}", "utf-8")
     #     )
+    #     response.add_header(b"Access-Control-Allow-Credentials", b"true")
     #     return response
 
     @auth("authenticated")
