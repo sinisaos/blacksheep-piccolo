@@ -15,7 +15,7 @@ app = Application(show_error_details=True)
 
 app.use_cors(
     allow_origins="http://localhost:8080",
-    allow_methods="*",
+    allow_methods="GET POST PATCH DELETE",
     allow_headers="*",
     allow_credentials=True,
     expose_headers="next_cursor,first_row,last_row",
