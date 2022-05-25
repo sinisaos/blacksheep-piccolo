@@ -31,9 +31,9 @@ class CursorPagination:
         if self.order_by == "id":
             # query where limit is equal to page_size plus
             # one in ASC order
-            query = table.select().order_by(
-                table._meta.primary_key, ascending=True
-            )
+            query = table.select(
+                table.all_columns(), table.get_readable()
+            ).order_by(table._meta.primary_key, ascending=True)
             query = query.limit(self.page_size + 1)
 
             # decoded query params cursor
