@@ -48,9 +48,13 @@ class CursorPagination:
                     .limit(self.page_size)
                 )
                 rows = await query.run()
-                # set new value to next_cursor
-                next_cursor = self.encode_cursor(str(rows[-1]["id"]))
-                headers["cursor"] = next_cursor
+                try:
+                    # set new value to next_cursor
+                    next_cursor = self.encode_cursor(str(rows[-1]["id"]))
+                    headers["cursor"] = next_cursor
+                except IndexError:
+                    headers["cursor"] = ""
+                    rows = []
             else:
                 query = query.where(
                     table._meta.primary_key >= int(decoded_cursor)
@@ -81,9 +85,13 @@ class CursorPagination:
                     .limit(self.page_size)
                 )
                 rows = await query.run()
-                # set new value to next_cursor
-                next_cursor = self.encode_cursor(str(rows[-1]["id"]))
-                headers["cursor"] = next_cursor
+                try:
+                    # set new value to next_cursor
+                    next_cursor = self.encode_cursor(str(rows[-1]["id"]))
+                    headers["cursor"] = next_cursor
+                except IndexError:
+                    headers["cursor"] = ""
+                    rows = []
             else:
                 query = query.where(
                     table._meta.primary_key <= int(decoded_cursor)
